@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+                <style>.lw { font-size: 60px; font-family: Arial, Helvetica, sans-serif; }</style>
+            </head>
+            <body>
+                <script>(function installLiveweaveConsoleBridge() {
+        if (window.__liveweaveConsoleBridge) return;
+        window.__liveweaveConsoleBridge = true;
+
+        function format(value) {
+            if (typeof value === 'string') return value;
+            if (typeof value === 'undefined') return 'undefined';
+            if (typeof value === 'function') return value.toString();
+            if (value instanceof Error) return value.name + ': ' + value.message;
+            if (value instanceof Element) return value.outerHTML;
+            try {
+                var seen = [];
+                return JSON.stringify(value, function(key, item) {
+                    if (typeof item === 'object' && item !== null) {
+                        if (seen.indexOf(item) !== -1) return '[Circular]';
+                        seen.push(item);
+                    }
+                    return item;
+                }, 2);
+            } catch (err) {
+                return String(value);
+            }
+        }
+
+        function send(type, values, id) {
+            parent.postMessage({
+                source: 'liveweave-preview-console',
+                type: type,
+                id: id || '',
+                values: (values || []).map(format)
+            }, '*');
+        }
+
+        ['log', 'info', 'warn', 'error', 'debug'].forEach(function(level) {
+            var original = console[level];
+            console[level] = function() {
+                var args = Array.prototype.slice.call(arguments);
+                send(level === 'log' || level === 'debug' ? 'log' : level, args);
+                if (original) original.apply(console, args);
+            };
+        });
+
+        window.addEventListener('error', function(event) {
+            send('error', [event.message + (event.lineno ? ' (line ' + event.lineno + ')' : '')]);
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            send('error', ['Unhandled promise rejection:', event.reason]);
+        });
+        window.addEventListener('message', function(event) {
+            var message = event.data || {};
+            if (event.source !== parent || message.source !== 'liveweave-parent-console' || message.type !== 'evaluate') return;
+            try {
+                var result = (0, eval)(message.code);
+                Promise.resolve(result).then(function(value) {
+                    send('result', [value], message.id);
+                }, function(error) {
+                    send('error', [error], message.id);
+                });
+            } catch (error) {
+                send('error', [error], message.id);
+            }
+        });
+        send('ready', []);
+    })();</script>
+                <script>(function installPreviewLinkGuard() {
+        var noticeTimer;
+
+        function showNotice(message) {
+            var notice = document.getElementById('lw-preview-link-notice');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'lw-preview-link-notice';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147483647;max-width:calc(100% - 24px);padding:10px 14px;border-radius:9px;background:#17212d;color:#fff;font:13px/1.4 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);pointer-events:none;';
+                document.body.appendChild(notice);
+            }
+            notice.textContent = message;
+            notice.hidden = false;
+            clearTimeout(noticeTimer);
+            noticeTimer = setTimeout(function() { notice.hidden = true; }, 3500);
+        }
+
+        document.addEventListener('click', function(event) {
+            var link = event.target.closest && event.target.closest('a[href]');
+            if (!link || event.defaultPrevented) return;
+
+            var href = (link.getAttribute('href') || '').trim();
+            if (href.charAt(0) === '#') {
+                event.preventDefault();
+                var fragment = href.slice(1);
+                if (!fragment) {
+                    window.scrollTo(0, 0);
+                    return;
+                }
+                try { fragment = decodeURIComponent(fragment); } catch (error) {}
+                var target = document.getElementById(fragment) || document.getElementsByName(fragment)[0];
+                if (target) target.scrollIntoView();
+                return;
+            }
+
+            if (/^(https?:)?\/\//i.test(href)) {
+                event.preventDefault();
+                window.open(href, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            if (/^(mailto:|tel:)/i.test(href)) return;
+
+            event.preventDefault();
+            showNotice('This page cannot be opened in the preview.');
+        }, true);
+    })();</script>
+                
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond Reporting — From Visibility to Action</title>
+<style>
+  :root{
+    --ink:#0f172a;
+    --muted:#475569;
+    --line:#e2e8f0;
+    --bg:#ffffff;
+    --soft:#f8fafc;
+    --accent:#0f766e;
+    --accent-2:#f59e0b;
+    --danger:#b91c1c;
+    --ok:#15803d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--soft);}
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width: 880px;
+    margin: 40px auto;
+    background: var(--bg);
+    padding: 56px 64px;
+    box-shadow: 0 10px 40px rgba(15,23,42,0.08);
+    border-radius: 6px;
+  }
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1{
+    font-size: 34px;
+    line-height: 1.2;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2{
+    font-size: 20px;
+    margin: 44px 0 12px;
+    letter-spacing: -0.005em;
+  }
+  h3{
+    font-size: 15px;
+    margin: 0 0 6px;
+    letter-spacing: 0.01em;
+  }
+  p{margin: 0 0 14px; color: var(--ink);}
+  .lede{
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 720px;
+  }
+  .rule{
+    height:1px;background:var(--line);margin: 32px 0;
+  }
+  /* Cards */
+  .grid-3{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .card{
+    border:1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 18px 16px;
+    background: #fff;
+  }
+  .card .num{
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .card p{font-size: 14px; color: var(--muted); margin: 0;}
+  /* Example */
+  .example{
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 12px;
+  }
+  .example-title{
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .example-sub{
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  .split{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .panel{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .panel h3{
+    display:flex; align-items:center; gap:8px;
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    display:inline-block;
+  }
+  .dot.red{background: var(--danger);}
+  .dot.green{background: var(--ok);}
+  .flow-step{
+    display:flex;
+    gap:10px;
+    font-size: 13.5px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    color: var(--ink);
+  }
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .tag{
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 22px;
+  }
+  /* Steps */
+  .steps{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .step{
+    border-top: 3px solid var(--accent);
+    padding-top: 12px;
+  }
+  .step .label{
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .step h3{margin: 4px 0 4px; font-size: 14px;}
+  .step p{font-size: 13px; color: var(--muted); margin: 0;}
+  /* Not-list */
+  .not-list{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    margin-top: 8px;
+  }
+  .not-list div{
+    font-size: 14px;
+    padding-left: 22px;
+    position: relative;
+    color: var(--ink);
+  }
+  .not-list div::before{
+    content: "✕";
+    position: absolute;
+    left: 0;
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 12px;
+    top: 2px;
+  }
+  /* Metrics */
+  .metrics{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .metric{
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .metric strong{
+    display:block;
+    color: var(--ink);
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  /* Closing */
+  .closing{
+    margin-top: 40px;
+    padding: 28px 28px;
+    border-left: 4px solid var(--accent-2);
+    background: var(--soft);
+    border-radius: 0 8px 8px 0;
+  }
+  .closing .q{
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .closing p{margin: 0; color: var(--muted); font-size: 15px;}
+  footer{
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+    display:flex;
+    justify-content: space-between;
+  }
+  @media (max-width: 720px){
+    .page{padding: 32px 24px; margin: 16px;}
+    h1{font-size: 26px;}
+    .grid-3, .steps, .metrics{grid-template-columns: 1fr;}
+    .split, .not-list{grid-template-columns: 1fr;}
+  }
+  @media print{
+    body{background:#fff;}
+    .page{box-shadow:none; margin:0; padding: 24px 32px; max-width:100%;}
+  }
+</style>
+
+
+<div class="page">
+
+  <div class="eyebrow">Operational Coordination · A Short Brief</div>
+  <h1>Beyond Reporting: From Visibility to Action</h1>
+  <p class="lede">
+    Most project-driven businesses have invested heavily in enterprise systems, reporting tools, and digital workflows.
+    Yet even when those systems work as intended, a quiet layer of friction remains — the manual work between
+    <em>knowing</em> something and <em>acting</em> on it.
+  </p>
+
+  <div class="rule"></div>
+
+  <h2>Where the friction actually lives</h2>
+  <p>In complex operations — construction, logistics, multi-entity groups — work crosses teams, systems, and sites. Each handoff is a place where information can go stale, actions can stall, and accountability can blur.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="num">01</div>
+      <h3>Visibility without resolution</h3>
+      <p>Reports surface the issue. Someone still has to investigate, find context, and coordinate the response.</p>
+    </div>
+    <div class="card">
+      <div class="num">02</div>
+      <h3>Handoffs without continuity</h3>
+      <p>Updates move between departments via email, chat, and spreadsheets — creating duplication, missed follow-ups, and delays.</p>
+    </div>
+    <div class="card">
+      <div class="num">03</div>
+      <h3>Processes with workarounds</h3>
+      <p>When the formal process doesn't match how work actually happens, employees build parallel ones. Those shadows aren't visible to management.</p>
+    </div>
+  </div>
+
+  <h2>A concrete pattern: the delivery delay</h2>
+  <p>The same scenario plays out in most project businesses. The data exists inside the ERP. The coordination doesn't.</p>
+
+  <div class="example">
+    <div class="example-title">Scenario: A supplier reports a delay on a critical purchase order.</div>
+    <div class="example-sub">The information exists. The action path is unclear.</div>
+
+    <div class="split">
+      <div class="panel">
+        <h3><span class="dot red"></span> How it usually works</h3>
+        <div class="flow-step"><span class="tag">1</span> Site engineer learns of the delay by phone.</div>
+        <div class="flow-step"><span class="tag">2</span> Project manager checks the ERP — status still shows "in transit".</div>
+        <div class="flow-step"><span class="tag">3</span> PM emails procurement. Waits.</div>
+        <div class="flow-step"><span class="tag">4</span> Finance is unaware. Cost impact isn't assessed.</div>
+        <div class="flow-step"><span class="tag">5</span> Days later, management asks about project timeline. No one has an updated view.</div>
+      </div>
+
+      <div class="panel">
+        <h3><span class="dot green"></span> What coordination looks like</h3>
+        <div class="flow-step"><span class="tag">1</span> A delay exception is detected from existing system data.</div>
+        <div class="flow-step"><span class="tag">2</span> The relevant PO, project, timeline, and cost context are pulled together automatically.</div>
+        <div class="flow-step"><span class="tag">3</span> The issue is routed to the right owner with a clear next step.</div>
+        <div class="flow-step"><span class="tag">4</span> Related functions (finance, project controls) are informed with shared context.</div>
+        <div class="flow-step"><span class="tag">5</span> The issue stays visible until resolved — and the outcome is written back to the system of record.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>The approach: a lightweight coordination layer</h2>
+  <p>Not a new ERP. Not another dashboard. A thin workflow that sits <em>between</em> existing systems and the people who use them.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="label">Step 1</div>
+      <h3>Detect</h3>
+      <p>Identify exceptions and overdue actions from data already in the systems.</p>
+    </div>
+    <div class="step">
+      <div class="label">Step 2</div>
+      <h3>Contextualise</h3>
+      <p>Assemble the surrounding project, cost, and history — so decisions don't need to start from scratch.</p>
+    </div>
+    <div class="step">
+      <div class="label">Step 3</div>
+      <h3>Route</h3>
+      <p>Send the issue to the right owner with the context and the next step. Approvals stay with authorised people.</p>
+    </div>
+    <div class="step">
+      <div class="label">Step 4</div>
+      <h3>Track</h3>
+      <p>Keep it visible. Escalate when overdue. Record the resolution in the system of record.</p>
+    </div>
+  </div>
+
+  <h2>What this is — and what it isn't</h2>
+
+  <div class="not-list">
+    <div>Not a replacement for the ERP or SAP.</div>
+    <div>Not a new reporting dashboard.</div>
+    <div>Not a full automation of decisions.</div>
+    <div>Not another system for teams to learn.</div>
+  </div>
+  <p style="margin-top:14px;">
+    It's a focused layer that reduces the manual effort between <strong>identifying an issue</strong> and <strong>resolving it</strong> — while keeping decisions in the hands of the people accountable for them.
+  </p>
+
+  <h2>How a pilot would be measured</h2>
+  <p>Any intervention should be judged on outcome, not activity. A focused pilot can baseline and track:</p>
+
+  <div class="metrics">
+    <div class="metric"><strong>Time-to-resolve</strong>From exception detected to issue closed.</div>
+    <div class="metric"><strong>Manual effort</strong>Hours spent on follow-ups, reconciliations, status chasing.</div>
+    <div class="metric"><strong>Overdue actions</strong>Count and age of stalled items across teams.</div>
+    <div class="metric"><strong>Visibility</strong>Clarity of ownership, status, and outstanding decisions.</div>
+  </div>
+
+  <div class="closing">
+    <div class="q">The question worth asking</div>
+    <p>
+      Where is the largest gap between the information an organisation already has — and the action it needs someone to take?
+      And can that gap be closed without replacing the systems that already work?
+    </p>
+  </div>
+
+  <footer>
+    <span>A brief on operational coordination</span>
+    <span>2026</span>
+  </footer>
+
+</div>
+
+
+                <script><!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Recruitment Operations Strategy: ICP & Sales Playbook</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            line-height: 1.5;
+        }
+        .header {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid #3b82f6;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+        .header p {
+            max-width: 800px;
+            margin: 12px auto 0 auto;
+            font-size: 11pt;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 16pt;
+            color: #1e293b;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        h2 {
+            font-size: 13pt;
+            color: #0f172a;
+            margin-top: 30px;
+            margin-bottom: 8px;
+        }
+        p {
+            font-size: 10.5pt;
+            color: #334155;
+            line-height: 1.6;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .subtitle {
+            font-style: italic;
+            font-weight: normal;
+            color: #475569;
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 10pt;
+        }
+        .content-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            font-size: 10pt;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+        li strong {
+            color: #0f172a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 14px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+        th {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 9.5pt;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Recruitment Operations Strategy</h1>
+        <p>A practical ICP, operational reality, prospecting paths, priority accounts, and qualification playbook for tailored ATS/CRM automation projects.</p>
+    </div>
+
+    <div class="container">
+        
+        <h1>Bottom Line</h1>
+        <div class="content-card">
+            <p>The best buyer is not a normal company hiring for itself. It is a mid-market recruiting, staffing, RPO, EOR, payroll-outsourcing, or overseas-manpower firm that serves many employer clients and handles high candidate volume. They need both sides of the workflow: ATS (candidates, jobs, stages, interviews, documents) plus CRM (employer clients, mandates, follow-ups, fee/placement records). A seller being local or international is not the core buying criterion; a credible business identity, a relevant demo, clear data-security handling, and a narrowly scoped fixed-price offer are.</p>
+        </div>
+
+        <h1>Disqualifiers</h1>
+        <div class="content-card">
+            <ul>
+                <li><strong>Normal SME:</strong> A company hiring a few employees each year should use off-the-shelf ATS/HRIS instead.</li>
+                <li><strong>Solo Recruiters and Tiny Agencies:</strong> Entities with no verified placement volume typically cannot justify structured custom automation.</li>
+                <li><strong>Global Staffing Giants:</strong> Firms already advertising a proprietary ATS/AI recruitment platform likely have procurement hurdles, existing systems, or massive internal development budgets.</li>
+                <li><strong>Vague Operations:</strong> A prospect that cannot name one costly workflow and one accountable owner. Do not pitch generic software; sell one measurable fix.</li>
+                <li><strong>Unlawful Data Collection:</strong> Anyone asking for LinkedIn scraping or candidate data collected without a lawful basis. Avoid making that a product feature.</li>
+            </ul>
+        </div>
+
+        <h1>Scope & Operational Reality</h1>
+        <div class="content-card">
+            <p>Building a targeted automation layer focuses on core operational value rather than a bloated, enterprise-grade replacement build. A successful deployment centers on candidate, client, and job pipelines, role permissions, CSV data migration, task automations, basic dashboards, integrated communication triggers, and initial post-launch support.</p>
+            <p><strong>Explicitly Excluded:</strong> LinkedIn scraping/API work, native payroll calculation engines, complex mobile apps, heavy AI scoring models, multi-country complex tax compliance, extensive historical database migrations, and excessive third-party integrations.</p>
+        </div>
+
+        <h1>Compliance Note</h1>
+        <div class="content-card">
+            <p>Use business contact channels and keep outreach relevant to the recipient’s commercial role. Local data protection regulations and spam control requirements apply; include truthful sender identification, provide an easy opt-out mechanism, and honour it immediately. Candidate CVs, passports, and work/visa documents represent sensitive operational data: implement strict access controls, audit logs, data retention and deletion rules, client-by-client data separation, secure backups, and data-processing agreements before handling production data.</p>
+        </div>
+
+        <h1>Ideal Customer Profile (ICP)</h1>
+        
+        <div class="content-card">
+            <h2>Tier 1 — Multi-Client Staffing / Recruitment Agencies</h2>
+            <div class="subtitle">Managing high volume, multiple recruiters, and shared employer databases.</div>
+            <ul>
+                <li><strong>Profile:</strong> 20 to 100 recruiters or a clear scale proxy; permanent and contract/temporary placements; multiple recruiters working the same candidate pools.</li>
+                <li><strong>Pain Points:</strong> Spreadsheets, separate ATS and CRM systems, recruiters sharing inboxes, duplicated CVs, lost follow-ups, no client portal, manual status updates, and high per-seat ATS software costs.</li>
+                <li><strong>Why Custom Fit:</strong> Candidate ownership, client requisitions, placement/commission visibility, automated follow-up, and client-facing workflows represent core revenue operations rather than generic HR admin.</li>
+            </ul>
+        </div>
+
+        <div class="content-card">
+            <h2>Tier 1 — RPO, EOR, Payroll & Manpower-Outsourcing Providers</h2>
+            <div class="subtitle">Managing external employer execution and global or regional deployment.</div>
+            <ul>
+                <li><strong>Profile:</strong> Runs recruitment for external employers and then onboards, deploys, pays, or manages contractors across various client accounts.</li>
+                <li><strong>Pain Points:</strong> Candidate data re-entered from recruitment into onboarding/payroll systems; client-specific approvals; contract expiry or compliance tracking managed in Excel; multi-office communication gaps.</li>
+                <li><strong>Why Custom Fit:</strong> The hand-off from lead to client mandate, candidate progression, and placement/onboarding is uniquely structured and difficult to fit into a rigid generic ATS.</li>
+            </ul>
+        </div>
+
+        <div class="content-card">
+            <h2>Tier 1 in Pakistan — Licensed Overseas Employment Promoters / Gulf Manpower Agencies</h2>
+            <div class="subtitle">High-volume cross-border workforce deployment and mobilization.</div>
+            <ul>
+                <li><strong>Profile:</strong> Valid OEP licence; bulk deployments to Gulf markets; documentation, medical, visa, trade-test, and mobilization stages; multiple regional offices and thousands of annual placements.</li>
+                <li><strong>Pain Points:</strong> Passport, visa, and document tracking maintained via WhatsApp and spreadsheets; large batches of candidates; overseas employer follow-ups; missed compliance or expiry dates.</li>
+                <li><strong>Why Custom Fit:</strong> A custom candidate-document-deployment tracker combined with a robust employer CRM is significantly more practical than a standard generic ATS.</li>
+            </ul>
+        </div>
+
+        <div class="content-card">
+            <h2>Tier 2 — Specialist Contract Staffing & Tier 3 — HR-Tech Startups</h2>
+            <div class="subtitle">Niche vertical operations and product-integrated hiring workflows.</div>
+            <ul>
+                <li><strong>Specialist Contract Staffing:</strong> IT, engineering/marine, healthcare, facilities/security, construction, or high-volume frontline staffing with recurring client requisitions and contractor renewals. Vertical workflow and compliance reminders create concrete operational ROI.</li>
+                <li><strong>HR-Tech Startups:</strong> Funded firms selling a differentiated recruiting workflow requiring white-label or deeply integrated features. Their hiring framework is part of their core product, offering potential for deeper collaboration.</li>
+            </ul>
+        </div>
+
+        <h1>Sales Motion & Playbook</h1>
+        <div class="content-card">
+            <ul>
+                <li><strong>Outreach Strategy:</strong> Send a personalized message to one operations leader, follow up with a brief diagnostic call where appropriate, and propose a focused discovery or scope prototype. Lead with visible operational workflows rather than generic software branding.</li>
+                <li><strong>First Message Template:</strong> "Hi [Name] — I noticed [firm] handles [specific service: contract staffing / RPO / overseas deployment]. Agencies at that point often have candidate follow-ups and client updates split between spreadsheets, WhatsApp, and legacy tools. I build focused systems around specific operational bottlenecks—for example, [their visible pain: visa-document stages / contractor renewals / client mandate tracking]—with a fixed scope. Would a short call next week be useful if I walk through the exact workflow design first?"</li>
+                <li><strong>Strong Buy Signals:</strong> High monthly candidate volume or bulk placement batches, numerous active requisitions or a strong recurring client base, multiple operating offices, and a named operations owner willing to provide sample workflows and weekly feedback.</li>
+            </ul>
+        </div>
+
+        <h1>Qualification Call Questions</h1>
+        <div class="content-card">
+            <ul>
+                <li>How many recruiters and active employer clients do you currently manage?</li>
+                <li>How many new candidates and active requisitions do you process monthly?</li>
+                <li>Can you show me the exact spreadsheet, WhatsApp, or inbox step where candidate status gets lost or data is retyped?</li>
+                <li>Which specific workflow costs you placements or recruiter hours: candidate follow-up, client updates, document expiry, interview scheduling, onboarding, or reporting?</li>
+                <li>What tools do you use today, what are their limitations, and why do they fail to fit your exact process?</li>
+                <li>Who owns operations and budget authority for streamlining this workflow?</li>
+            </ul>
+        </div>
+
+        <h1>Primary Markets & Target Accounts</h1>
+        
+        <h2>Primary Market: Pakistan</h2>
+        <div class="content-card">
+            <p><strong>Target Hubs:</strong> Karachi, Lahore, Islamabad/Rawalpindi, and Faisalabad, with a heavy focus on overseas manpower firms serving GCC employers alongside domestic RPO/EOR/payroll providers. Local trust, regional language fluency, and responsive communication channels provide a strong practical advantage.</p>
+            <p><strong>Best Roles to Contact:</strong> Owner, CEO, or Managing Director for OEPs; Director or Head of Recruitment/Overseas Operations; COO or Head of Workforce/HR Outsourcing.</p>
+            <p><strong>Priority Account Examples:</strong> Delta International Recruitment Agency, Fulcrum Pvt. Limited, Allied Services International, HRSG, Esquare Global Partners, and Prime Human Resource Services.</p>
+        </div>
+
+        <h2>Primary Market: Singapore & ASEAN Region</h2>
+        <div class="content-card">
+            <p><strong>Target Focus:</strong> Licensed employment agencies offering contract staffing, RPO, work-pass processing, payroll, outsourcing, or specialist manpower services rather than generic corporate internal HR teams.</p>
+            <p><strong>Best Roles to Contact:</strong> Founder or Managing Director for smaller teams; Operations Director or COO; Head or Director of Recruitment, Staffing, RPO, or Workforce Solutions.</p>
+            <p><strong>Priority Account Examples:</strong> Applycup Hiring Solutions, Business Edge Personnel Services, Rikvin Singapore, Gateway Search, Staffking Pte Ltd, and TalentSphere.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
+</script>
+            
+        
+    </body>
